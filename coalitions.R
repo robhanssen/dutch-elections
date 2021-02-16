@@ -5,7 +5,7 @@ library(R.utils)
 # poll Feb 16
 election = tibble(
                   party = c("VVD","PvdA","PVV","SP","CDA","D66","CU","GL","SGP","PvdD","50PLUS","VNL","Denk", "FvD","PP"),
-                  seats = c( 33,    9,     20,  14,  19,   19,    5,  14,   3,    5,       4,     0,     3,     2,    0)
+                  seats = c( 31,    9,     20,  14,  19,   19,    5,  14,   3,    5,       4,     1,     3,     2,    1)
                   ) %>%
             filter(seats > 0) %>%
             arrange(-seats) %>%
