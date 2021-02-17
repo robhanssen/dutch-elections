@@ -6,7 +6,7 @@ election = tibble(
                   party = c("VVD","PVV","CDA","D66","GL","SP","PvdA","CU","PvdD","50PLUS","SGP","Denk","FvD", "JA21"),
                   seats = c( 38,    22,   20,  15,   11,  10,   12,   6,   7,       1,       2,     2,   3,     1),
                   # ranked mainly on right-left balance in Dutch politics; PVV and FvD are arbitrarily off because of cordon sanitaire
-     distancefromcenter = c(  -4,   -15,  -2,   2,   6,   8,    3,   -4,   7,      -2,      -8,     5, -15,     5)
+     distancefromcenter = c(  -4,   -15,  -2,   2,   6,   8,    3,   -4,   7,      -2,      -8,     7, -15,    -10)
                   ) %>%
             filter(seats > 0) %>%
             arrange(-seats) %>%
