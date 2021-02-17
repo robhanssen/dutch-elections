@@ -35,12 +35,7 @@ partycompatibility <- function(pvec, elec)
 resultlist = sapply(numbers, function(i) 
                                             { pv = as.integer(unlist(strsplit(coalitions$bitcode[i], split="")))
                                               # generate the party list by matching "1"s to names
-                                              partylist = ""
-                                              for(j in 1:length(election$party)) 
-                                                  { 
-                                                    if(pv[j]==1) 
-                                                        partylist = paste(partylist, election$party[j])     
-                                                  } 
+                                              partylist = paste(rep(election$party,pv), collapse=" ")
                                               # count number of "1"s
                                               numparties = sum(pv)
                                               # count number of seats in total set
