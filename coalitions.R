@@ -1,7 +1,7 @@
 library(tidyverse)
 library(R.utils)
 
-election = read_csv("sources/latestpoll2021.csv") %>%
+election = read_csv("sources/latestpoll2021.csv", comment="#") %>%
               filter(seats > 0) %>%
               arrange(-seats)
 
