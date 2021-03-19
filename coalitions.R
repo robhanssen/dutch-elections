@@ -6,11 +6,10 @@ election = read_csv("sources/latestpoll2021.csv", comment="#") %>%
               arrange(-seats)
 
 numbers = 1:(2^nrow(election)-1)
-# bitcode = intToBin(numbers)
 
 coalitions = tibble(
                     numbers,
-                    bitcode = intToBin(numbers), 
+                    bitcode = intToBin(numbers),
                     partylist = "", 
                     seatcount = 0,
                     numparties = 0,
