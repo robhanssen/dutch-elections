@@ -2,42 +2,31 @@
 # R program to determine the seats distribution in the Dutch Tweede Kamer after the 2017 election
 # 
 library(tidyverse)
-# library(ggplot2)
-# library(dplyr)
-# library(readr)
-library(R.utils)
-# library(plyr)
+# library(R.utils)
+theme_set(theme_light())
 
 # number of seats in the Tweede Kamer
 totalseats = 150
 
 # election result
-#election <- read_csv("C:/Users/rh0008/Google Drive/Documents/JMP/Dutch Elections/zetels.csv")
 election <- read_csv("sources/2017votecount.csv")
 # total number of valid votes casts
-totalvotes = sum(election$votes)
+totalvotes <- sum(election$votes)
 
-kiesdeler = totalvotes/totalseats
+kiesdeler <- totalvotes / totalseats
 
 # initial distribution of seats, 
-# election$seats <-  floor(election$votes / totalvotes * totalseats)
 #
 # Elimination of parties that do not have seats out of the residual seats calculation
 #
 # Parties that did not win seats in the original calculation have no rights to residual seats
 # according to law
 #
-election <- election %>% 
-              mutate( seats = floor(votes / totalvotes * totalseats),
-                      extraseats = 0, 
-                      totalseats = seats) %>% 
+election <- election %>%
+              mutate(seats = floor(votes / totalvotes * totalseats),
+                     extraseats = 0,
+                     totalseats = seats) %>%
               filter(seats != 0)
-
-givenseats = sum(election$seats)
-
-# some temporary values to show how many residual seats parties pick up
-# election$extraseats = 0
-# election$totalseats = election$seats
 
 #
 # residual seat algorithm:
@@ -46,52 +35,82 @@ givenseats = sum(election$seats)
 # 3. repeat with new number of seats per party until all residual seats are given away
 #
 
+raw_election <- election
+election <- raw_election
+givenseats <- sum(election$seats)
 
-while(givenseats < totalseats)
+while (givenseats < totalseats)
 {
   election <- election %>% mutate(residquot = votes / (seats + extraseats + 1))
   maxresid <- max(election$residquot)
-  # election$extraseats[election$residquot==maxresid] <- election$extraseats[election$residquot==maxresid]+1
-  election <- election %>% filter(residquot == maxresid) %>% mutate(extraseats = extraseats + 1) %>% full_join(election, by=c("parties", "votes", "seats","extraseats")) #%>% View()
+
+  election <- election %>%
+    mutate(extraseats = case_when(residquot == maxresid ~ extraseats + 1,
+                                  TRUE ~ extraseats)
+    )
+
   election$totalseats <- election$seats + election$extraseats
   givenseats <- sum(election$totalseats)
 }
 
+election
+
 # removal of residquot values and ordering by number of seats
 # election <- election %>% arrange(-totalseats) %>% select(-residquot) 
 
-View(election)
 
 # nice plot
-ggplot(election, aes(x=reorder(parties,-totalseats),y=totalseats)) +
-  geom_bar(stat="identity") + 
-  xlab("Parties")+
-  ylab("Total number of seats")
+election %>%
+  ggplot +
+  aes(x = fct_reorder(parties, totalseats),
+      y = totalseats) +
+  geom_col(alpha = .8) +
+  labs(x = "Party",
+       y = "Number of seats") +
+  coord_flip()
 
+partycount <- election %>% count() %>% pull(n)
 
-#election$party<-election$parties
-#election <- data.frame(party,seats) %>% arrange(-seats) %>% filter(seats>0)
+election$partynum <- 1:partycount
 
-election$partycount = 1
+numbers <- 1:(2^partycount - 1)
+bitcode <- R.utils::intToBin(numbers)
 
-partycount = sum(election$partycount)
-
-election$partynum = 1:partycount
-
-numbers = 1:(2^partycount-1)
-bitcode = intToBin(numbers)
-#bitcode = int2bin(numbers, lenght=16)
-
-coalitions = data.frame(numbers,bitcode)
+coalitions <- tibble(numbers, bitcode)
 coalitions$partylist <- ""
 coalitions$seatcount <- 0
 
-partyvector<-laply(seq(1,partycount), function(i) as.integer(substr(coalitions$bitcode, i, i)))
+decomp_vector <- function(vector) {
+    v <- sort(strsplit(vector, "")[[1]])
+    as.numeric(v)
+}
+
+
+
+# partyvector <-
+#   lapply(seq_len(length(numbers)),
+#          function(x) decomp_vector(coalitions$bitcode[x]))
+
+
+coal <- coalitions %>%
+    mutate(bitlist = lapply(seq_len(length(numbers)),
+                            function(x) decomp_vector(coalitions$bitcode[x])),
+           partycount = sum(unlist(bitlist)),
+           seatcount = sum(unlist(bitlist) * election$totalseats)
+    )
+
+
+# coalitions$bitter <- partyvector #decomp_vector(coalitions$bitcode)
+
+
+unlist(coal$bitlist[3]) * election$totalseats
+sum(unlist(coal$bitlist[3])) #* election$totalseats
+
 
 for (i in numbers)
 {
-  coalitions$seatcount[numbers==i] <- sum(partyvector[,i] * election$totalseats)
-  coalitions$numparties[numbers==i] <- sum(partyvector[,i])
+  coalitions$seatcount[i] <- sum(partyvector[[i]] * election$totalseats)
+  coalitions$numparties[i] <- sum(partyvector[[i]])
   k = 0
   for (index in partyvector[,i]) 
   {
@@ -112,6 +131,3 @@ minoritycoalitions <- coalitions %>% filter(seatcount>=70) %>%
   select(-numbers,-bitcode)
 
 # clean out
-rm(maxresid,bitcode,i,k,index,numbers,partycount,totalvotes,givenseats,totalseats,partyvector)
-
-
