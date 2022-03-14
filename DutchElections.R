@@ -59,14 +59,6 @@ partycount <- election %>%
   count() %>%
   pull(n)
 
-election$partynum <- 1:partycount
-
-numbers <- 1:(2^partycount - 1)
-bitcode <- R.utils::intToBin(numbers)
-num_length <- length(numbers)
-
-coalitions <- tibble(numbers, bitcode)
-
 decomp_vector <- function(vector) {
   v <- strsplit(vector, "")[[1]]
   as.numeric(v)
@@ -82,8 +74,13 @@ partylist_gen <- function(bitlst, elec) {
   elec$parties[which(bitvec == 1)]
 }
 
-coal <-
-  coalitions %>%
+num_length <- 2^partycount - 1
+
+coalitions <-
+  tibble(
+    numbers = 1:num_length,
+    bitcode = R.utils::intToBin(numbers)
+  ) %>%
   mutate(
     bitlist = map(
       seq_len(num_length),
@@ -112,12 +109,12 @@ coal <-
   ) %>%
   select(partylist, numparties, seatcount)
 
-majoritycoalitions <- coal %>%
+majoritycoalitions <- coalitions %>%
   filter(seatcount >= 75) %>%
   filter(numparties <= 5) %>%
   arrange(numparties, -seatcount)
 
-minoritycoalitions <- coal %>%
+minoritycoalitions <- coalitions %>%
   filter(seatcount >= 70) %>%
   filter(seatcount <= 75) %>%
   filter(numparties <= 5) %>%
