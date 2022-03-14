@@ -66,12 +66,13 @@ decomp_vector <- function(vector) {
 
 partyseat_gen <- function(bitlst, elec) {
   bitvec <- unlist(bitlst)
-  bitvec * elec$totalseats
+  sum(bitvec * elec$totalseats)
 }
 
 partylist_gen <- function(bitlst, elec) {
   bitvec <- unlist(bitlst)
-  elec$parties[which(bitvec == 1)]
+  l <- elec$parties[which(bitvec == 1)]
+  paste(l, collapse = ", ")
 }
 
 num_length <- 2^partycount - 1
@@ -83,28 +84,20 @@ coalitions <-
   ) %>%
   mutate(
     bitlist = map(
-      seq_len(num_length),
+      numbers,
       ~ decomp_vector(bitcode[.x])
     ),
-    party_seat = map(
-      seq_len(num_length),
+    seatcount = map_dbl(
+      numbers,
       ~ partyseat_gen(bitlist[.x], election)
     ),
-    party_list = map(
-      seq_len(num_length),
+    partylist = map_chr(
+      numbers,
       ~ partylist_gen(bitlist[.x], election)
     ),
-    seatcount = map_dbl(
-      seq_len(num_length),
-      ~ sum(unlist(party_seat[.x])),
-    ),
     numparties = map_dbl(
-      seq_len(num_length),
+      numbers,
       ~ sum(unlist(bitlist[.x]))
-    ),
-    partylist = map_chr(
-      seq_len(num_length),
-      ~ paste(unlist(party_list[.x]), collapse = ", ")
     )
   ) %>%
   select(partylist, numparties, seatcount)
