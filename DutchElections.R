@@ -55,7 +55,7 @@ while (givenseats < totalseats) {
   givenseats <- sum(election$totalseats)
 }
 
-# elections <- 
+# election <- 
 #   read_csv("sources/latestpoll2023.csv",
 #       comment = "#",
 #       col_types = "cii")
